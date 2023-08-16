@@ -9,15 +9,6 @@ import telebot
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 DB_File = os.getenv("DB")
-Users=[]
-
-def write_dict_to_json(dictionary, filename):
-    with open(filename, 'w') as json_file:
-        json.dump(dictionary, json_file, indent=4)
-def read_json_to_dict(filename):
-    with open(filename, 'r') as json_file:
-        data = json.load(json_file)
-    return data
 
 def DB_Check_table(name):
     conn = sqlite3.connect(DB_File)
@@ -31,13 +22,21 @@ def DB_Check_table(name):
     ''')
     conn.commit()
     conn.close()
+def DB_Get_all_users():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    table_names = cursor.fetchall()
+    table_names_list = [name[0] for name in table_names]
+    conn.close()
+    print(table_names_list)
 
-# Run bot handler
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['help', 'start'])
 def start(message):
     DB_Check_table(message.chat.username)
+    DB_Get_all_users()
     bot.reply_to(message, f'Hi {message.chat.first_name}, use menu to see commands.')
 
 @bot.message_handler(commands=['add'])
@@ -51,24 +50,19 @@ def add(message):
 def start(message):
     markup = telebot.types.InlineKeyboardMarkup()
 
-    button1 = telebot.types.InlineKeyboardButton(text='Мани ведёт То искать краба.', callback_data='button1')
-    button2 = telebot.types.InlineKeyboardButton(text='Мани рада.', callback_data='button2')
-    button3 = telebot.types.InlineKeyboardButton(text='То рад.', callback_data='button3')
-    button4 = telebot.types.InlineKeyboardButton(text='Мани привела То на поле.', callback_data='button4')
+    button1 = telebot.types.InlineKeyboardButton(text='1️⃣', callback_data='0')
+    button2 = telebot.types.InlineKeyboardButton(text='2️⃣', callback_data='1')
+    button3 = telebot.types.InlineKeyboardButton(text='3️⃣', callback_data='0')
+    button4 = telebot.types.InlineKeyboardButton(text='5️⃣', callback_data='0')
 
-    markup.add(button1, button2)
-    markup.add(button3, button4)
+    markup.add(button1, button2, button3, button4)
 
-    bot.send_message(message.chat.id, "มานีคีใจ", reply_markup=markup)
+    bot.send_message(message.chat.id, "มานีคีใจ\n1. Мани ведёт То искать краба.\n2. Мани рада.\n3. То рад.\n4. Мани привела То на поле.", reply_markup=markup)
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    if call.data == 'button1':
-        bot.send_message(call.message.chat.id, "You pressed Button 1")
-    elif call.data == 'button2':
-        bot.send_message(call.message.chat.id, "You pressed Button 2")
-    elif call.data == 'button3':
-        bot.send_message(call.message.chat.id, "You pressed Button 3")
-    elif call.data == 'button4':
-        bot.send_message(call.message.chat.id, "You pressed Button 4")
+    if call.data == '0':
+        bot.send_message(call.message.chat.id, "Nope :(")
+    elif call.data == '1':
+        bot.send_message(call.message.chat.id, "Yup!")
 
 bot.infinity_polling()
